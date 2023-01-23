@@ -338,7 +338,7 @@ void createVS(GLuint& program, const string& filename)
 
     char output[1024] = {0};
     glGetShaderInfoLog(vs, 1024, &length, output);
-    printf("VS compile log: %s\n", output);
+    // printf("VS compile log: %s\n", output);
 
     glAttachShader(program, vs);
 }
@@ -362,7 +362,7 @@ void createFS(GLuint& program, const string& filename)
 
     char output[1024] = {0};
     glGetShaderInfoLog(fs, 1024, &length, output);
-    printf("FS compile log: %s\n", output);
+    // printf("FS compile log: %s\n", output);
 
     glAttachShader(program, fs);
 }

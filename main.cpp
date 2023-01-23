@@ -209,6 +209,7 @@ void renderText(const std::string& text, GLfloat x, GLfloat y, GLfloat scale, gl
 
 void display()
 {
+    glUseProgram(gProgram[0]);
     glClearColor(0, 0, 0, 1);
     glClearDepth(1.0f);
     glClearStencil(0);

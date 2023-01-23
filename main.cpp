@@ -238,7 +238,6 @@ void display()
                 else {
                     if(!playerChose) score ++;
                     playerChose = false;
-                    std::cout<<moves<<" "<<score<<endl;
                     Bunny *bunny = new Bunny();
                     bunny->exploding = false;
                     bunny->scale = 1.f;
@@ -273,8 +272,7 @@ void display()
     assert(glGetError() == GL_NO_ERROR);
     std::string text = "Moves: "; text += to_string(moves); text += "  Score: "; text += to_string(score);
 
-    renderText(text, 0, 0, 1, glm::vec3(0.9, 0.9, 0.1));
-    cout<< text << endl;    
+    renderText(text, 0, 0, 1, glm::vec3(0.9, 0.9, 0.1)); 
     assert(glGetError() == GL_NO_ERROR);
 
     if(disableInput & !exploding){
@@ -530,7 +528,6 @@ void initVBO()
     glGenVertexArrays(1, &vao);
     assert(vao > 0);
     glBindVertexArray(vao);
-    cout << "vao = " << vao << endl;
 
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
@@ -815,7 +812,6 @@ int main(int argc, char** argv)   // Create Main Function For Bringing It All To
 
     if (!window)
     {
-        std::cout << "no window" << std::endl;
         glfwTerminate();
         exit(-1);
     }

@@ -635,6 +635,7 @@ void keyboard(GLFWwindow* window, int key, int scancode, int action, int mods)
        moves = 0;
        score = 0;
        disableInput = false;
+       playerChose = false;
     }
 }
 

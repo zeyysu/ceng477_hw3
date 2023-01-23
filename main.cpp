@@ -35,6 +35,7 @@ GLuint gVertexAttribBuffer, gIndexBuffer;
 GLint gInVertexLoc, gInNormalLoc;
 int gVertexDataSizeInBytes, gNormalDataSizeInBytes;
 bool disableInput = false;
+bool playerChose = false;
 struct Vertex
 {
     Vertex(GLfloat inX, GLfloat inY, GLfloat inZ) : x(inX), y(inY), z(inZ) { }
@@ -185,7 +186,9 @@ void display()
                     exploding = true;
                 }
                 else {
-                    score ++;
+                    if(!playerChose) score ++;
+                    playerChose = false;
+                    std::cout<<moves<<" "<<score<<endl;
                     Bunny *bunny = new Bunny();
                     bunny->exploding = false;
                     bunny->scale = 1.f;
@@ -604,8 +607,7 @@ void clicked( double xpos, double ypos){
         bunnies[x][y].exploding = true;
         moves++;
         disableInput = true;
-        cout<<"booom"<<endl;
-        
+        playerChose = true;  
     }
 }
 void mousebutton(GLFWwindow* window, int button, int action, int mods)

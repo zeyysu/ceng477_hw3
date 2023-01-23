@@ -92,6 +92,55 @@ vector<vector<Bunny> > bunnies;
 glm::vec3 colors[] = {glm::vec3(0.5,0.5,0.0),glm::vec3(0.5,0.0,0.5),
 glm::vec3(0.0,0.5,0.5), glm::vec3(0.5,0.0,0.0), glm::vec3(0.0,0.5,0.0), glm::vec3(0.0,0.0,0.5)};
 
+void matchBunnies(){
+    //first look at columnss
+    int count = 0;
+    int lastColor = -1;
+    for(int i=0; i< column; i++){
+        lastColor = -1;
+        count = 0;
+        for(int j=0; j<row; j++){
+            if(bunnies[i][j].colorId == lastColor) count ++;
+            else{
+                if( count >= 3 ){
+                    for(int k = j -count; k<j ; k++){
+                        bunnies[i][k].exploding = true;
+                    }
+                }
+                count = 1;
+                lastColor = bunnies[i][j].colorId;
+            }
+        }
+        if( count >= 3 ){
+            for(int k = row - count; k<row ; k++){
+                        bunnies[i][k].exploding = true;
+            }
+        }
+    }
+    //look at rows
+    for(int j=0; j<row; j++){
+        lastColor = -1;
+        count = 0;
+        for(int i=0; i< column; i++){
+            if(bunnies[i][j].colorId == lastColor) count ++;
+            else{
+                if( count >= 3 ){
+                    for(int k = i - count; k<i ; k++){
+                        bunnies[k][j].exploding = true;
+                    }
+                }
+                count = 1;
+                lastColor = bunnies[i][j].colorId;
+            }
+        }
+        if( count >= 3 ){
+            for(int k = column - count; k<column ; k++){
+                bunnies[k][j].exploding = true;
+            }
+        }
+    }    
+}
+
 void drawModel()
 {
 	glBindBuffer(GL_ARRAY_BUFFER, gVertexAttribBuffer);
@@ -112,20 +161,25 @@ void display()
 
 	static float angle = 0;
 
+    matchBunnies();
+
     float scale = (17/objsize) / (max(column, row));
     glm::mat4 RT = glm::translate(glm::mat4(1.f), glm::vec3(-0.5*(maxX-minX)-minX,-0.5*(maxY-minY)-minY, -0.5*(maxZ-minZ)-minZ));
     glm::mat4 R = glm::rotate(glm::mat4(1.f), glm::radians(angle), glm::vec3(0, 1, 0));
     glm::mat4 T = glm::translate(glm::mat4(1.f), glm::vec3(-1.f*minX,-1.f*minY, -1.f));
     glm::mat4 ortMat = glm::ortho(-10.f,10.f,-10.f,10.f,-20.f,20.f);
 
-    for(vector<Bunny> v : bunnies){
-        for(Bunny bunny : v){
-            glm::mat4 S = glm::scale(glm::mat4(1.f), glm::vec3(scale*bunny.scale, scale*bunny.scale, scale*bunny.scale));
-            glm::mat4 T2 = glm::translate(glm::mat4(1.f), glm::vec3(bunny.xCoord,bunny.yCoord, -1.f));
+    for(int i=0; i< column; i++){
+        for(int j=0; j<row; j++){
+            if(bunnies[i][j].exploding){
+                bunnies[i][j].scale += 0.01;
+            }
+            glm::mat4 S = glm::scale(glm::mat4(1.f), glm::vec3(scale*bunnies[i][j].scale, scale*bunnies[i][j].scale, scale*bunnies[i][j].scale));
+            glm::mat4 T2 = glm::translate(glm::mat4(1.f), glm::vec3(bunnies[i][j].xCoord,bunnies[i][j].yCoord, -1.f));
             glm::mat4 modelMat = T2 * S  * R * RT;
             glm::mat4 modelMatInv = glm::transpose(glm::inverse(modelMat));
-            glm::vec3 color = colors[bunny.colorId];
-            glm::vec3 lightPos = glm::vec3(bunny.xCoord, bunny.yCoord , 5.f);
+            glm::vec3 color = colors[bunnies[i][j].colorId];
+            glm::vec3 lightPos = glm::vec3(bunnies[i][j].xCoord, bunnies[i][j].yCoord , 1.f);
 
             glUniformMatrix4fv(glGetUniformLocation(gProgram[0], "modelingMat"), 1, GL_FALSE, glm::value_ptr(modelMat));
             glUniformMatrix4fv(glGetUniformLocation(gProgram[0], "modelingMatInvTr"), 1, GL_FALSE, glm::value_ptr(modelMatInv));
@@ -415,12 +469,12 @@ void initVBO()
         maxZ = std::max(maxZ, gVertices[i].z);
 	}
 
-    std::cout << "minX = " << minX << std::endl;
-    std::cout << "maxX = " << maxX << std::endl;
-    std::cout << "minY = " << minY << std::endl;
-    std::cout << "maxY = " << maxY << std::endl;
-    std::cout << "minZ = " << minZ << std::endl;
-    std::cout << "maxZ = " << maxZ << std::endl;
+    // std::cout << "minX = " << minX << std::endl;
+    // std::cout << "maxX = " << maxX << std::endl;
+    // std::cout << "minY = " << minY << std::endl;
+    // std::cout << "maxY = " << maxY << std::endl;
+    // std::cout << "minZ = " << minZ << std::endl;
+    // std::cout << "maxZ = " << maxZ << std::endl;
 
     objsize = max(maxX-minX, maxY-minY);
 
@@ -506,12 +560,28 @@ void initBunnies(){
     }
 }
 
+void clicked( double xpos, double ypos){
+    
+
+    int x = (int)floor((xpos/width)*column);//get the grid coordinates of the click
+    int y = row-1-(int)floor((ypos/(height-64))*row);//get the grid coordinates of the click
+    if(x>=0 && x<column && y>=0 && y<row){
+        bunnies[x][y].exploding = true;
+        moves++;
+        cout<<"booom"<<endl;
+        
+    }
+}
 void mousebutton(GLFWwindow* window, int button, int action, int mods)
 {
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
         double xpos,ypos;
         glfwGetCursorPos(window, &xpos, &ypos);
-        cout<<"pressed"<<xpos<<" "<<ypos<<endl;
+    }
+    else if(button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE){
+        double xpos,ypos;
+        glfwGetCursorPos(window, &xpos, &ypos);
+        clicked(xpos,ypos);
     }
 }
 
@@ -524,6 +594,8 @@ void keyboard(GLFWwindow* window, int key, int scancode, int action, int mods)
     if (key == GLFW_KEY_R && action == GLFW_PRESS)
     {
        initBunnies();
+       moves = 0;
+       score = 0;
     }
 }
 

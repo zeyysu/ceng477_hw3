@@ -34,6 +34,7 @@ string objfile;
 GLuint gVertexAttribBuffer, gIndexBuffer;
 GLint gInVertexLoc, gInNormalLoc;
 int gVertexDataSizeInBytes, gNormalDataSizeInBytes;
+bool disableInput = false;
 struct Vertex
 {
     Vertex(GLfloat inX, GLfloat inY, GLfloat inZ) : x(inX), y(inY), z(inZ) { }
@@ -105,6 +106,7 @@ void matchBunnies(){
                 if( count >= 3 ){
                     for(int k = j -count; k<j ; k++){
                         bunnies[i][k].exploding = true;
+                        disableInput = true;
                     }
                 }
                 count = 1;
@@ -113,7 +115,8 @@ void matchBunnies(){
         }
         if( count >= 3 ){
             for(int k = row - count; k<row ; k++){
-                        bunnies[i][k].exploding = true;
+                    bunnies[i][k].exploding = true;
+                    disableInput = true;
             }
         }
     }
@@ -127,6 +130,7 @@ void matchBunnies(){
                 if( count >= 3 ){
                     for(int k = i - count; k<i ; k++){
                         bunnies[k][j].exploding = true;
+                        disableInput = true;
                     }
                 }
                 count = 1;
@@ -136,6 +140,7 @@ void matchBunnies(){
         if( count >= 3 ){
             for(int k = column - count; k<column ; k++){
                 bunnies[k][j].exploding = true;
+                disableInput = true;
             }
         }
     }    
@@ -161,7 +166,9 @@ void display()
 
 	static float angle = 0;
 
-    matchBunnies();
+    if(!disableInput) matchBunnies();
+
+    bool exploding = false;
 
     float scale = (17/objsize) / (max(column, row));
     glm::mat4 RT = glm::translate(glm::mat4(1.f), glm::vec3(-0.5*(maxX-minX)-minX,-0.5*(maxY-minY)-minY, -0.5*(maxZ-minZ)-minZ));
@@ -172,7 +179,26 @@ void display()
     for(int i=0; i< column; i++){
         for(int j=0; j<row; j++){
             if(bunnies[i][j].exploding){
-                bunnies[i][j].scale += 0.01;
+                if(bunnies[i][j].scale < 1.5){ 
+                    bunnies[i][j].scale += 0.01;
+                    disableInput = true;
+                    exploding = true;
+                }
+                else {
+                    score ++;
+                    Bunny *bunny = new Bunny();
+                    bunny->exploding = false;
+                    bunny->scale = 1.f;
+                    bunny->xCoord = bunnies[i][j].xCoord;
+                    bunny->yCoord = bunnies[i][row-1].yCoord +(18.f/row);
+                    bunny->colorId = rand() % 6;
+                    bunnies[i].push_back(*bunny); 
+                    bunnies[i].erase(bunnies[i].begin()+j);
+                    exploding = exploding | false;        
+                }
+            }
+            if(bunnies[i][j].yCoord > (-8.f + (j+0.5)*(18.f/row))){
+                bunnies[i][j].yCoord -= 0.05;
             }
             glm::mat4 S = glm::scale(glm::mat4(1.f), glm::vec3(scale*bunnies[i][j].scale, scale*bunnies[i][j].scale, scale*bunnies[i][j].scale));
             glm::mat4 T2 = glm::translate(glm::mat4(1.f), glm::vec3(bunnies[i][j].xCoord,bunnies[i][j].yCoord, -1.f));
@@ -189,6 +215,15 @@ void display()
             drawModel();
 
         }
+    }
+
+    if(disableInput & !exploding){
+        bool res = false;
+        for(int i=0; i< column; i++){
+            res = (bunnies[i][row-1].yCoord > (-8.f + (row-1+0.5)*(18.f/row)));
+            if(res) break;
+        }
+        disableInput = res;
     }
 
 	angle += 0.5;
@@ -568,6 +603,7 @@ void clicked( double xpos, double ypos){
     if(x>=0 && x<column && y>=0 && y<row){
         bunnies[x][y].exploding = true;
         moves++;
+        disableInput = true;
         cout<<"booom"<<endl;
         
     }
@@ -578,7 +614,7 @@ void mousebutton(GLFWwindow* window, int button, int action, int mods)
         double xpos,ypos;
         glfwGetCursorPos(window, &xpos, &ypos);
     }
-    else if(button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE){
+    else if(button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE &&!disableInput){
         double xpos,ypos;
         glfwGetCursorPos(window, &xpos, &ypos);
         clicked(xpos,ypos);
@@ -596,6 +632,7 @@ void keyboard(GLFWwindow* window, int key, int scancode, int action, int mods)
        initBunnies();
        moves = 0;
        score = 0;
+       disableInput = false;
     }
 }
 
